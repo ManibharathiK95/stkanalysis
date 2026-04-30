@@ -17,7 +17,7 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 15px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; }
         h1, h2, h3 { color: var(--accent); margin-bottom: 15px; text-align: center; }
         p.friend-advice { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--accent); padding: 10px; margin-bottom: 20px; font-size: 0.9rem; border-radius: 4px; }
         p.friend-warning { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 10px; margin-bottom: 20px; font-size: 0.9rem; border-radius: 4px; color: #fca5a5;}
@@ -35,8 +35,8 @@
         .btn-secondary:hover { background: #2563eb; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 0.9rem; }
-        th { color: var(--text-muted); }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+        th { color: var(--text-muted); font-size: 0.8rem; }
         
         .stat-box { text-align: center; padding: 15px; background: #0f172a; border-radius: 8px; }
         .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
@@ -50,6 +50,10 @@
         .news-links a { display: block; color: var(--blue); text-decoration: none; margin-bottom: 8px; font-size: 0.9rem; }
         .news-links a:hover { text-decoration: underline; }
         .sub-text { font-size: 0.8rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; }
+        
+        .indicator-good { color: var(--accent); font-weight: bold; font-size: 0.9rem; }
+        .indicator-bad { color: var(--danger); font-weight: bold; font-size: 0.9rem; }
+        .indicator-warn { color: var(--warning); font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -59,10 +63,7 @@
     
     <div class="card">
         <p class="friend-advice">
-            <strong>Listen to me:</strong> I've set your Year 1 allocation to be heavily protective because you said you are conservative (3/10). I put only 5% in NVDA. Do not touch this for 15 years. Ignore the news noise.
-        </p>
-        <p class="friend-warning">
-            <strong>Warning:</strong> NVDA and SOXX are highly volatile. If NVDA drops 20% tomorrow, DO NOT SELL. That is normal for single stocks. Your VOO and VT will keep you safe.
+            <strong>How buying/selling works here:</strong> I do NOT recommend selling in the first 5 years. Instead, look at the "Indicators" below. If a stock turns RED (too much of your money), just change where your NEW monthly money goes to balance it out.
         </p>
     </div>
 
@@ -71,71 +72,86 @@
         <h3>1. Monthly Setup</h3>
         <div class="grid-2">
             <div>
-                <label>How much are you investing THIS month? (AED)</label>
+                <label>Investing THIS month? (AED)</label>
                 <input type="number" id="monthlyAed" value="1000">
-                <p class="sub-text">800, 1000, 1200... whatever you can afford this month.</p>
+                <p class="sub-text">800, 1000, 1200... whatever you can afford.</p>
             </div>
             <div>
                 <label>AED to USD Rate</label>
                 <input type="number" id="aedUsdRate" value="3.6725" step="0.0001">
-                <p class="sub-text">IBKR will show you the exact rate when you convert.</p>
             </div>
         </div>
     </div>
 
     <!-- Data Entry -->
     <div class="card">
-        <h3>2. Update Stock Prices (Do this once a month)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Open IBKR, look at current prices, type them below. The app remembers them.</p>
+        <h3>2. Market Data & Your Holdings</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Update prices once a month. Update "Shares I Own" whenever you buy.</p>
         <table>
             <thead>
                 <tr>
                     <th>Stock</th>
-                    <th>Your Allocation</th>
-                    <th>Risk Level</th>
-                    <th>Current Price (USD)</th>
+                    <th>Target %</th>
+                    <th>Current Price ($)</th>
+                    <th>Shares I Own (in IBKR)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>VT (World)</td>
-                    <td>40% (Safe core)</td>
-                    <td><span class="risk-tag risk-low">LOW</span></td>
-                    <td><input type="number" id="priceVT" step="0.01" placeholder="e.g. 105.50"></td>
+                    <td>VT <span class="risk-tag risk-low">SAFE</span></td>
+                    <td>40%</td>
+                    <td><input type="number" id="priceVT" step="0.01"></td>
+                    <td><input type="number" id="sharesVT" step="0.001" value="0"></td>
                 </tr>
                 <tr>
-                    <td>VOO (S&P 500)</td>
-                    <td>40% (Safe core)</td>
-                    <td><span class="risk-tag risk-low">LOW-MED</span></td>
-                    <td><input type="number" id="priceVOO" step="0.01" placeholder="e.g. 470.00"></td>
+                    <td>VOO <span class="risk-tag risk-low">SAFE</span></td>
+                    <td>40%</td>
+                    <td><input type="number" id="priceVOO" step="0.01"></td>
+                    <td><input type="number" id="sharesVOO" step="0.001" value="0"></td>
                 </tr>
                 <tr>
-                    <td>QQQ (Tech)</td>
-                    <td>10% (Growth)</td>
-                    <td><span class="risk-tag risk-med">MEDIUM</span></td>
-                    <td><input type="number" id="priceQQQ" step="0.01" placeholder="e.g. 380.00"></td>
+                    <td>QQQ <span class="risk-tag risk-med">MED</span></td>
+                    <td>10%</td>
+                    <td><input type="number" id="priceQQQ" step="0.01"></td>
+                    <td><input type="number" id="sharesQQQ" step="0.001" value="0"></td>
                 </tr>
                 <tr>
-                    <td>SOXX (Chips)</td>
-                    <td>5% (Wildcard)</td>
-                    <td><span class="risk-tag risk-high">HIGH</span></td>
-                    <td><input type="number" id="priceSOXX" step="0.01" placeholder="e.g. 220.00"></td>
+                    <td>SOXX <span class="risk-tag risk-high">HIGH</span></td>
+                    <td>5%</td>
+                    <td><input type="number" id="priceSOXX" step="0.01"></td>
+                    <td><input type="number" id="sharesSOXX" step="0.001" value="0"></td>
                 </tr>
                 <tr>
-                    <td>NVDA (Single)</td>
-                    <td>5% (Wildcard)</td>
-                    <td><span class="risk-tag risk-high">VERY HIGH</span></td>
-                    <td><input type="number" id="priceNVDA" step="0.01" placeholder="e.g. 875.00"></td>
+                    <td>NVDA <span class="risk-tag risk-high">HIGH</span></td>
+                    <td>5%</td>
+                    <td><input type="number" id="priceNVDA" step="0.01"></td>
+                    <td><input type="number" id="sharesNVDA" step="0.001" value="0"></td>
                 </tr>
             </tbody>
         </table>
-        <button class="btn-primary" onclick="calculateAndSave()">Save Prices & Calculate Wealth</button>
+        <button class="btn-primary" onclick="calculateAndSave()">Calculate Everything</button>
+    </div>
+
+    <!-- Good/Bad Indicators (THE NEW FEATURE) -->
+    <div class="card" id="healthCard" style="display: none;">
+        <h3>3. Portfolio Health Check (Good/Bad Indicators)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Stock</th>
+                    <th>Current Value ($)</th>
+                    <th>Should Be</th>
+                    <th>Actually Is</th>
+                    <th>Status / Advice</th>
+                </tr>
+            </thead>
+            <tbody id="healthCheck"></tbody>
+        </table>
     </div>
 
     <!-- Results -->
     <div class="card" id="resultsCard" style="display: none;">
-        <h3>3. Your Purchase Plan For This Month</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">This is exactly what to buy in IBKR right now.</p>
+        <h3>4. What To Buy This Month</h3>
         <table>
             <thead>
                 <tr>
@@ -147,69 +163,49 @@
             <tbody id="purchasePlan"></tbody>
         </table>
 
-        <h3 style="margin-top: 30px;">4. Your 15-Year Wealth Projection</h3>
+        <h3 style="margin-top: 30px;">5. 15-Year Wealth Projection</h3>
         <div class="grid-2" style="margin-bottom: 15px;">
             <div class="stat-box">
                 <div class="stat-value" id="totalInvested">0</div>
-                <div class="stat-label">Total Put In (If you average this amount)</div>
+                <div class="stat-label">Total Put In (15 Yrs @ this avg)</div>
             </div>
             <div class="stat-box">
                 <div class="stat-value" id="projectedWealth">0</div>
-                <div class="stat-label">Estimated Future Value (8% avg)</div>
+                <div class="stat-label">Estimated Future Value (8%)</div>
             </div>
         </div>
-        <p class="friend-advice">
-            <strong>Why 8%?</strong> Historically, the US/World market returns 8-10% a year. I used 8% to be safe. Notice how if you type 1200 this month, the future number jumps up? That's the magic of compound interest rewarding you for extra months.
-        </p>
     </div>
 
     <!-- News & Insights -->
     <div class="card">
-        <h3>5. Friend's Market Insight & News</h3>
-        <p style="margin-bottom: 15px;"><strong>Current Macro Climate:</strong> Interest rates are high right now, but expected to drop slightly in 2024/2025. Tech stocks (like NVDA/QQQ) have had a massive run. If they drop, <strong>do not panic</strong>. Your 80% in VT/VOO is your shield.</p>
+        <h3>6. News & Backup</h3>
         <div class="news-links">
-            <strong>Check these ONCE a week, no more:</strong><br>
-            <a href="https://www.cnbc.com/investing/" target="_blank">1. CNBC Investing (Simple English, easy to read)</a>
-            <a href="https://www.reuters.com/markets/us/" target="_blank">2. Reuters US Markets (Factual, no exaggeration)</a>
-            <a href="https://www.marketwatch.com/investing/index/spx" target="_blank">3. MarketWatch S&P 500 (To see how VOO is doing)</a>
+            <strong>Check these ONCE a week:</strong><br>
+            <a href="https://www.cnbc.com/investing/" target="_blank">1. CNBC Investing</a>
+            <a href="https://www.reuters.com/markets/us/" target="_blank">2. Reuters US Markets</a>
         </div>
-    </div>
-
-    <!-- Backup -->
-    <div class="card">
-        <h3>6. Backup & Safety</h3>
-        <button class="btn-secondary" onclick="exportData()">Download Backup (Save to Google Drive)</button>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">Your data is saved inside your browser right now. If you clear your browser cache, you lose it. Click the button above once a month and save the file to your Google Drive folder. It takes 2 seconds.</p>
+        <button class="btn-secondary" onclick="exportData()" style="margin-top:15px;">Download Backup to Google Drive</button>
     </div>
 </div>
 
 <script>
-    // Allocations based on conservative risk profile
-    const allocations = {
-        VT: 0.40,
-        VOO: 0.40,
-        QQQ: 0.10,
-        SOXX: 0.05,
-        NVDA: 0.05
-    };
+    const allocations = { VT: 0.40, VOO: 0.40, QQQ: 0.10, SOXX: 0.05, NVDA: 0.05 };
+    const months = 15 * 12;
+    const expectedReturn = 0.08;
 
-    const months = 15 * 12; // 15 years
-    const expectedReturn = 0.08; // 8% conservative expectation
-
-    // Load saved data on start
     window.onload = function() {
         const saved = localStorage.getItem('wealthBuddyData');
         if(saved) {
             const data = JSON.parse(saved);
             document.getElementById('aedUsdRate').value = data.rate || 3.6725;
             document.getElementById('monthlyAed').value = data.lastAed || 1000;
-            document.getElementById('priceVT').value = data.VT || '';
-            document.getElementById('priceVOO').value = data.VOO || '';
-            document.getElementById('priceQQQ').value = data.QQQ || '';
-            document.getElementById('priceSOXX').value = data.SOXX || '';
-            document.getElementById('priceNVDA').value = data.NVDA || '';
             
-            if(data.VT) calculateAndSave(true); // Auto calculate if data exists
+            ['VT', 'VOO', 'QQQ', 'SOXX', 'NVDA'].forEach(ticker => {
+                document.getElementById('price'+ticker).value = data['price'+ticker] || '';
+                document.getElementById('shares'+ticker).value = data['shares'+ticker] || 0;
+            });
+            
+            if(data.priceVT) calculateAndSave(true);
         }
     };
 
@@ -218,45 +214,78 @@
         const rate = parseFloat(document.getElementById('aedUsdRate').value);
 
         if(isNaN(monthlyAed) || monthlyAed <= 0) {
-            if(!isAutoLoad) alert("Hey! Put in a valid AED amount for this month.");
+            if(!isAutoLoad) alert("Put in a valid AED amount.");
             return;
         }
+
+        const tickers = ['VT', 'VOO', 'QQQ', 'SOXX', 'NVDA'];
+        let prices = {};
+        let shares = {};
+        let hasError = false;
+
+        tickers.forEach(ticker => {
+            prices[ticker] = parseFloat(document.getElementById('price'+ticker).value);
+            shares[ticker] = parseFloat(document.getElementById('shares'+ticker).value) || 0;
+            if(isNaN(prices[ticker])) hasError = true;
+        });
+
+        if (hasError) {
+            if(!isAutoLoad) alert("Please fill in all current stock prices.");
+            return;
+        }
+
+        // Save data
+        let saveObj = { rate, lastAed: monthlyAed };
+        tickers.forEach(t => { saveObj['price'+t] = prices[t]; saveObj['shares'+t] = shares[t]; });
+        localStorage.setItem('wealthBuddyData', JSON.stringify(saveObj));
 
         const monthlyUsd = monthlyAed / rate;
 
-        const prices = {
-            VT: parseFloat(document.getElementById('priceVT').value),
-            VOO: parseFloat(document.getElementById('priceVOO').value),
-            QQQ: parseFloat(document.getElementById('priceQQQ').value),
-            SOXX: parseFloat(document.getElementById('priceSOXX').value),
-            NVDA: parseFloat(document.getElementById('priceNVDA').value)
-        };
+        // --- 1. HEALTH CHECK (Good/Bad Indicators) ---
+        let totalPortfolioValue = 0;
+        let values = {};
+        tickers.forEach(t => { values[t] = prices[t] * shares[t]; totalPortfolioValue += values[t]; });
 
-        // Validation
-        if (Object.values(prices).some(isNaN)) {
-            if(!isAutoLoad) alert("Hey! Please fill in all the stock prices first.");
-            return;
+        let healthHtml = '';
+        if(totalPortfolioValue > 0) {
+            tickers.forEach(t => {
+                const targetPct = (allocations[t] * 100).toFixed(0);
+                const actualPct = ((values[t] / totalPortfolioValue) * 100).toFixed(1);
+                let status = "";
+                
+                // Logic for Good/Bad
+                if(actualPct > (allocations[t] * 100) * 1.5) { // If it's 50% bigger than it should be
+                    status = `<span class="indicator-bad">⚠️ BAD (Too Heavy)</span><br><span style="font-size:0.75rem; color:#94a3b8">Stop buying this. Put new money in others.</span>`;
+                } else if(actualPct > (allocations[t] * 100) * 1.2) {
+                    status = `<span class="indicator-warn">⚡ WATCH (Getting Heavy)</span>`;
+                } else {
+                    status = `<span class="indicator-good">✅ GOOD (Healthy)</span>`;
+                }
+
+                healthHtml += `<tr>
+                    <td>${t}</td>
+                    <td>$${values[t].toFixed(2)}</td>
+                    <td>${targetPct}%</td>
+                    <td>${actualPct}%</td>
+                    <td>${status}</td>
+                </tr>`;
+            });
+            document.getElementById('healthCard').style.display = 'block';
+        } else {
+            document.getElementById('healthCard').style.display = 'none';
         }
+        document.getElementById('healthCheck').innerHTML = healthHtml;
 
-        // Save to browser (including this month's AED)
-        localStorage.setItem('wealthBuddyData', JSON.stringify({rate, lastAed: monthlyAed, ...prices}));
-
-        // Calculate monthly buys
+        // --- 2. PURCHASE PLAN ---
         let planHtml = '';
-        for (let stock in prices) {
-            const usdToSpend = monthlyUsd * allocations[stock];
-            const units = usdToSpend / prices[stock];
-            planHtml += `
-                <tr>
-                    <td>${stock}</td>
-                    <td>$${usdToSpend.toFixed(2)}</td>
-                    <td><strong>${units.toFixed(4)} shares</strong></td>
-                </tr>
-            `;
-        }
+        tickers.forEach(t => {
+            const usdToSpend = monthlyUsd * allocations[t];
+            const units = usdToSpend / prices[t];
+            planHtml += `<tr><td>${t}</td><td>$${usdToSpend.toFixed(2)}</td><td><strong>${units.toFixed(4)} shares</strong></td></tr>`;
+        });
         document.getElementById('purchasePlan').innerHTML = planHtml;
 
-        // Calculate 15 year projection (Assuming they average this monthly amount)
+        // --- 3. PROJECTION ---
         const totalInvestedAed = monthlyAed * months;
         const monthlyRate = Math.pow(1 + expectedReturn, 1/12) - 1;
         const futureValueUsd = monthlyUsd * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
@@ -268,16 +297,12 @@
         document.getElementById('resultsCard').style.display = 'block';
         
         if(!isAutoLoad) {
-            document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth' });
-            alert("Done! Your data is saved safely in your browser.");
+            document.getElementById('healthCard').scrollIntoView({ behavior: 'smooth' });
         }
     }
 
     function exportData() {
-        const rate = document.getElementById('aedUsdRate').value;
-        const aed = document.getElementById('monthlyAed').value;
-        const data = `Wealth Buddy Backup\nDate: ${new Date().toLocaleDateString()}\nLast Month Invested: ${aed} AED\nAED/USD Rate: ${rate}\n\nVT Price: ${document.getElementById('priceVT').value}\nVOO Price: ${document.getElementById('priceVOO').value}\nQQQ Price: ${document.getElementById('priceQQQ').value}\nSOXX Price: ${document.getElementById('priceSOXX').value}\nNVDA Price: ${document.getElementById('priceNVDA').value}`;
-        
+        const data = `Wealth Buddy Backup\nDate: ${new Date().toLocaleDateString()}\nAED: ${document.getElementById('monthlyAed').value}\nRate: ${document.getElementById('aedUsdRate').value}\n\nVT Shares: ${document.getElementById('sharesVT').value}\nVOO Shares: ${document.getElementById('sharesVOO').value}\nQQQ Shares: ${document.getElementById('sharesQQQ').value}\nSOXX Shares: ${document.getElementById('sharesSOXX').value}\nNVDA Shares: ${document.getElementById('sharesNVDA').value}`;
         const blob = new Blob([data], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
