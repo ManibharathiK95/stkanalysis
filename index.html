@@ -49,6 +49,7 @@
         
         .news-links a { display: block; color: var(--blue); text-decoration: none; margin-bottom: 8px; font-size: 0.9rem; }
         .news-links a:hover { text-decoration: underline; }
+        .sub-text { font-size: 0.8rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -58,7 +59,7 @@
     
     <div class="card">
         <p class="friend-advice">
-            <strong>Listen to me:</strong> You are investing 1000 AED (~$272 USD) a month. I have set your Year 1 allocation to be heavily protective because you said you are conservative (3/10). I put only 5% in NVDA. Do not touch this for 15 years. Ignore the news noise.
+            <strong>Listen to me:</strong> I've set your Year 1 allocation to be heavily protective because you said you are conservative (3/10). I put only 5% in NVDA. Do not touch this for 15 years. Ignore the news noise.
         </p>
         <p class="friend-warning">
             <strong>Warning:</strong> NVDA and SOXX are highly volatile. If NVDA drops 20% tomorrow, DO NOT SELL. That is normal for single stocks. Your VOO and VT will keep you safe.
@@ -67,15 +68,17 @@
 
     <!-- Settings -->
     <div class="card">
-        <h3>1. Monthly Setup (Do this once)</h3>
+        <h3>1. Monthly Setup</h3>
         <div class="grid-2">
             <div>
-                <label>Monthly Investment (AED)</label>
-                <input type="number" id="monthlyAed" value="1000" disabled>
+                <label>How much are you investing THIS month? (AED)</label>
+                <input type="number" id="monthlyAed" value="1000">
+                <p class="sub-text">800, 1000, 1200... whatever you can afford this month.</p>
             </div>
             <div>
-                <label>AED to USD Rate (Update if needed)</label>
+                <label>AED to USD Rate</label>
                 <input type="number" id="aedUsdRate" value="3.6725" step="0.0001">
+                <p class="sub-text">IBKR will show you the exact rate when you convert.</p>
             </div>
         </div>
     </div>
@@ -131,8 +134,8 @@
 
     <!-- Results -->
     <div class="card" id="resultsCard" style="display: none;">
-        <h3>3. Your Monthly Purchase Plan</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">This is exactly what to buy in IBKR this month.</p>
+        <h3>3. Your Purchase Plan For This Month</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">This is exactly what to buy in IBKR right now.</p>
         <table>
             <thead>
                 <tr>
@@ -148,7 +151,7 @@
         <div class="grid-2" style="margin-bottom: 15px;">
             <div class="stat-box">
                 <div class="stat-value" id="totalInvested">0</div>
-                <div class="stat-label">Total You Put In (15 Yrs)</div>
+                <div class="stat-label">Total Put In (If you average this amount)</div>
             </div>
             <div class="stat-box">
                 <div class="stat-value" id="projectedWealth">0</div>
@@ -156,7 +159,7 @@
             </div>
         </div>
         <p class="friend-advice">
-            <strong>Why 8%?</strong> Historically, the US/World market returns 8-10% a year. I used 8% to be safe and conservative for you. That means your money doubles roughly every 9 years without you doing anything.
+            <strong>Why 8%?</strong> Historically, the US/World market returns 8-10% a year. I used 8% to be safe. Notice how if you type 1200 this month, the future number jumps up? That's the magic of compound interest rewarding you for extra months.
         </p>
     </div>
 
@@ -199,6 +202,7 @@
         if(saved) {
             const data = JSON.parse(saved);
             document.getElementById('aedUsdRate').value = data.rate || 3.6725;
+            document.getElementById('monthlyAed').value = data.lastAed || 1000;
             document.getElementById('priceVT').value = data.VT || '';
             document.getElementById('priceVOO').value = data.VOO || '';
             document.getElementById('priceQQQ').value = data.QQQ || '';
@@ -210,8 +214,14 @@
     };
 
     function calculateAndSave(isAutoLoad = false) {
+        const monthlyAed = parseFloat(document.getElementById('monthlyAed').value);
         const rate = parseFloat(document.getElementById('aedUsdRate').value);
-        const monthlyAed = 1000;
+
+        if(isNaN(monthlyAed) || monthlyAed <= 0) {
+            if(!isAutoLoad) alert("Hey! Put in a valid AED amount for this month.");
+            return;
+        }
+
         const monthlyUsd = monthlyAed / rate;
 
         const prices = {
@@ -228,8 +238,8 @@
             return;
         }
 
-        // Save to browser
-        localStorage.setItem('wealthBuddyData', JSON.stringify({rate, ...prices}));
+        // Save to browser (including this month's AED)
+        localStorage.setItem('wealthBuddyData', JSON.stringify({rate, lastAed: monthlyAed, ...prices}));
 
         // Calculate monthly buys
         let planHtml = '';
@@ -246,9 +256,8 @@
         }
         document.getElementById('purchasePlan').innerHTML = planHtml;
 
-        // Calculate 15 year projection (Standard Future Value of Annuity formula)
+        // Calculate 15 year projection (Assuming they average this monthly amount)
         const totalInvestedAed = monthlyAed * months;
-        // Converting monthly 8% to actual monthly compound: (1.08)^(1/12) - 1
         const monthlyRate = Math.pow(1 + expectedReturn, 1/12) - 1;
         const futureValueUsd = monthlyUsd * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
         const futureValueAed = futureValueUsd * rate;
@@ -266,7 +275,8 @@
 
     function exportData() {
         const rate = document.getElementById('aedUsdRate').value;
-        const data = `Wealth Buddy Backup\nDate: ${new Date().toLocaleDateString()}\nAED/USD Rate: ${rate}\n\nVT Price: ${document.getElementById('priceVT').value}\nVOO Price: ${document.getElementById('priceVOO').value}\nQQQ Price: ${document.getElementById('priceQQQ').value}\nSOXX Price: ${document.getElementById('priceSOXX').value}\nNVDA Price: ${document.getElementById('priceNVDA').value}`;
+        const aed = document.getElementById('monthlyAed').value;
+        const data = `Wealth Buddy Backup\nDate: ${new Date().toLocaleDateString()}\nLast Month Invested: ${aed} AED\nAED/USD Rate: ${rate}\n\nVT Price: ${document.getElementById('priceVT').value}\nVOO Price: ${document.getElementById('priceVOO').value}\nQQQ Price: ${document.getElementById('priceQQQ').value}\nSOXX Price: ${document.getElementById('priceSOXX').value}\nNVDA Price: ${document.getElementById('priceNVDA').value}`;
         
         const blob = new Blob([data], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
