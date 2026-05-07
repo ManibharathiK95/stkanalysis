@@ -39,7 +39,7 @@
     
     <div class="card">
         <div class="advice">
-            <strong>How this works:</strong> Type your total AED. The app automatically splits it (66% VT, 34% QQQ) and tells you exactly how many shares to buy in IBKR.
+            <strong>How this works:</strong> Type your total AED to invest. The app splits it (66% VT, 34% QQQ) and tells you exactly how many shares to buy.
         </div>
     </div>
 
@@ -58,8 +58,8 @@
     </div>
 
     <div class="card">
-        <h3>2. IBKR Data</h3>
-        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px;">The prices below are pre-filled. Only change them if you want to match IBKR exactly right now.</p>
+        <h3>2. IBKR Account Data</h3>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px;">Prices are pre-filled. Only change them if you want to be exact.</p>
         <table>
             <thead>
                 <tr>
@@ -87,6 +87,14 @@
                 </tr>
             </tbody>
         </table>
+        
+        <!-- NEW BOX FOR CASH -->
+        <div style="margin-top: 15px;">
+            <label>Uninvested Cash in IBKR (AED)</label>
+            <input type="number" id="uninvestedCash" step="0.01" value="0">
+            <span class="sub-label">Type your "Excess Liquidity" here (e.g. 639.15). This makes the calculator match your IBKR "Net Liquidation Value" perfectly.</span>
+        </div>
+
         <button class="btn-main" onclick="calculate()">Execute & Calculate</button>
     </div>
 
@@ -97,7 +105,7 @@
             <tbody id="buyPlan"></tbody>
         </table>
 
-        <h3 style="margin-top:25px;">4. Your Current Wealth</h3>
+        <h3 style="margin-top:25px;">4. Your Total Wealth (Net Liquidation Value)</h3>
         <div class="grid-2">
             <div class="stat-box">
                 <div class="stat-val" id="curAed">0</div>
@@ -130,7 +138,6 @@
 </div>
 
 <script>
-    // Roadmap Data
     var roadmap = [
         { yr: 1, aed: 1500 }, { yr: 2, aed: 1800 }, { yr: 3, aed: 2200 },
         { yr: 4, aed: 3500 }, { yr: 5, aed: 4500 }, { yr: 6, aed: 5500 },
@@ -140,7 +147,6 @@
     ];
 
     window.onload = function() {
-        // 1. Build Roadmap Table
         var html = '';
         var runVal = 0; 
         var monthlyRateInr = Math.pow(1.125, 1/12) - 1; 
@@ -161,9 +167,8 @@
         }
         document.getElementById('roadmapTable').innerHTML = html;
 
-        // 2. Load Saved Data Safely (This fixes the crash bug)
         try {
-            var saved = localStorage.getItem('finalData');
+            var saved = localStorage.getItem('finalDataV2');
             if(saved) {
                 var d = JSON.parse(saved);
                 document.getElementById('monthlyAed').value = d.aed || 1500;
@@ -172,14 +177,14 @@
                 document.getElementById('priceQQQ').value = d.pQQQ || 480;
                 document.getElementById('sharesVT').value = d.sVT || 0;
                 document.getElementById('sharesQQQ').value = d.sQQQ || 0;
+                document.getElementById('uninvestedCash').value = d.cash || 0;
                 
-                if(d.sVT > 0) {
+                if(d.sVT > 0 || d.cash > 0) {
                     calculate(true);
                 }
             }
         } catch(error) {
-            // If old data is broken, delete it automatically
-            localStorage.removeItem('finalData');
+            localStorage.removeItem('finalDataV2');
         }
     };
 
@@ -190,17 +195,16 @@
         var pQQQ = parseFloat(document.getElementById('priceQQQ').value);
         var sVT = parseFloat(document.getElementById('sharesVT').value) || 0;
         var sQQQ = parseFloat(document.getElementById('sharesQQQ').value) || 0;
+        var cash = parseFloat(document.getElementById('uninvestedCash').value) || 0;
 
         if(isNaN(aed) || isNaN(pVT) || isNaN(pQQQ)) {
             if(!isAutoLoad) alert("Fill in Total AED and both IBKR prices.");
             return;
         }
 
-        // Save Data
-        var saveObj = { aed: aed, rate: inrRate, pVT: pVT, pQQQ: pQQQ, sVT: sVT, sQQQ: sQQQ };
-        localStorage.setItem('finalData', JSON.stringify(saveObj));
+        var saveObj = { aed: aed, rate: inrRate, pVT: pVT, pQQQ: pQQQ, sVT: sVT, sQQQ: sQQQ, cash: cash };
+        localStorage.setItem('finalDataV2', JSON.stringify(saveObj));
 
-        // Math
         var vtAed = aed * 0.66;
         var qqqAed = aed * 0.34;
         var vtUsd = vtAed / 3.6725;
@@ -209,15 +213,14 @@
         var vtSharesToBuy = (vtUsd / pVT).toFixed(4);
         var qqqSharesToBuy = (qqqUsd / pQQQ).toFixed(4);
 
-        // Update Buy Plan
         var planHtml = '';
         planHtml += '<tr><td>VT (Shield)</td><td>' + vtAed.toFixed(0) + ' AED</td><td><strong>' + vtSharesToBuy + ' shares</strong></td></tr>';
         planHtml += '<tr><td>QQQ (Sword)</td><td>' + qqqAed.toFixed(0) + ' AED</td><td><strong>' + qqqSharesToBuy + ' shares</strong></td></tr>';
         document.getElementById('buyPlan').innerHTML = planHtml;
 
-        // Update Current Wealth
+        // Calculate total wealth: Stocks + Uninvested Cash
         var totalUsd = (sVT * pVT) + (sQQQ * pQQQ);
-        var totalAedVal = totalUsd * 3.6725;
+        var totalAedVal = (totalUsd * 3.6725) + cash; // Added cash here!
         var totalInrVal = totalAedVal * inrRate;
 
         document.getElementById('curAed').innerText = totalAedVal.toLocaleString(undefined, {maximumFractionDigits:0}) + " AED";
@@ -229,7 +232,6 @@
         
         document.getElementById('curInr').innerText = inrDisplay;
 
-        // Show Results
         document.getElementById('resultsCard').style.display = 'block';
         if(!isAutoLoad) {
             document.getElementById('resultsCard').scrollIntoView({behavior:'smooth'});
@@ -237,7 +239,7 @@
     }
 
     function exportData() {
-        var data = "Blueprint Backup\nDate: " + new Date().toLocaleDateString() + "\nAED: " + document.getElementById('monthlyAed').value + "\nINR Rate: " + document.getElementById('aedInrRate').value + "\nVT Shares: " + document.getElementById('sharesVT').value + "\nQQQ Shares: " + document.getElementById('sharesQQQ').value;
+        var data = "Blueprint Backup\nDate: " + new Date().toLocaleDateString() + "\nAED: " + document.getElementById('monthlyAed').value + "\nINR Rate: " + document.getElementById('aedInrRate').value + "\nVT Shares: " + document.getElementById('sharesVT').value + "\nQQQ Shares: " + document.getElementById('sharesQQQ').value + "\nCash: " + document.getElementById('uninvestedCash').value;
         var blob = new Blob([data], {type:'text/plain'});
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
